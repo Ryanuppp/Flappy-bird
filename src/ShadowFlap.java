@@ -12,6 +12,7 @@ import java.util.Queue;
  */
 public class ShadowFlap extends AbstractGame {
     private final Image BACKGROUND_IMAGE = new Image("res/level-0/background.png");
+    private final Image BACKGROUND_IMAGE_LEVEL1 = new Image("res/level-1/background.png");
     private final String INSTRUCTION_MSG = "PRESS SPACE TO START";
     private final String GAME_OVER_MSG = "GAME OVER!";
     private final String CONGRATS_MSG = "CONGRATULATIONS!";
@@ -77,7 +78,7 @@ public class ShadowFlap extends AbstractGame {
             renderInstructionScreen(input);
         }
 
-        if (collision || birdOutOfBound()){
+        if ((collision || birdOutOfBound()) && lifeBar.getLeftOverLife() != 0){
             lifeBar.lifeLose();
             bird.reset();
             pipeSets.poll();
@@ -88,7 +89,7 @@ public class ShadowFlap extends AbstractGame {
 
         // game over
         if ( lifeBar.getLeftOverLife() == 0) {
-             renderGameOverScreen();
+            renderGameOverScreen();
         }
 
         // game won
@@ -163,7 +164,7 @@ public class ShadowFlap extends AbstractGame {
 
     public void updateScore() {
         // TODO level0 and level1 have different ways to update score
-        if (bird.getX() > currentPipeSet.getTopBox().right()) {
+         if (bird.getX() > currentPipeSet.getTopBox().right()) {
             score_level1 += 1;
             //smooth the animation
             waitingToRemovePipeSet.offer(pipeSets.poll());
