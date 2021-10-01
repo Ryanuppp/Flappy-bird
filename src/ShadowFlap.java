@@ -25,6 +25,7 @@ public class ShadowFlap extends AbstractGame {
     private final int SCORE_MSG_OFFSET = 75;
     private Bird bird;
     private PipeSet currentPipeSet;
+    private PipeSet_steel currentPipeSet_steel;
     private LifeBar lifeBar;
     private Queue<PipeSet> pipeSets;
     private Queue<PipeSet> waitingToRemovePipeSet;
@@ -32,6 +33,7 @@ public class ShadowFlap extends AbstractGame {
     private Queue<PipeSet_steel> waitingToRemovePipeSet_steel;
     private int score_level1;
     private int score_level2;
+    private int score;
     private boolean gameOn;
     private boolean collision;
     private boolean win;
@@ -49,6 +51,7 @@ public class ShadowFlap extends AbstractGame {
         pipeSets.offer(new PipeSet());
         currentPipeSet = (PipeSet)pipeSets.peek();
         frameCount = 0;
+        score = 0;
         score_level1 = 0;
         score_level2 = 0;
         gameOn = false;
@@ -111,7 +114,7 @@ public class ShadowFlap extends AbstractGame {
         pipeSet_steels = new LinkedList<PipeSet_steel>();
         waitingToRemovePipeSet_steel = new LinkedList<PipeSet_steel>();
         pipeSet_steels.offer(new PipeSet_steel());
-        currentPipeSet = (PipeSet_steel)pipeSet_steels.peek();
+        currentPipeSet_steel = (PipeSet_steel)pipeSet_steels.peek();
         if (input.wasPressed(Keys.ENTER)) {
             gameOn = true;
         }
@@ -131,22 +134,23 @@ public class ShadowFlap extends AbstractGame {
              waitingToRemovePipeSet.offer(pipeSets.poll());
              if(!pipeSets.isEmpty())
                  currentPipeSet = pipeSets.peek();
-             String scoreMsg = SCORE_MSG + score_level1;
-             FONT.drawString(scoreMsg, 100, 100);
-        }else if(isLevel1 && bird.getX() > currentPipeSet.getTopBox().right()){
+             score = score_level1;
+        }else if(isLevel1 && bird.getX() > currentPipeSet_steel.getTopBox().right()){
              score_level2 += 1;
              waitingToRemovePipeSet_steel.offer(pipeSet_steels.poll());
              if(!pipeSet_steels.isEmpty())
-                 currentPipeSet = pipeSet_steels.peek();
-             String scoreMsg = SCORE_MSG + score_level2;
-             FONT.drawString(scoreMsg, 100, 100);
+                 currentPipeSet_steel = pipeSet_steels.peek();
+             score = score_level2;
         }
+        String scoreMsg = SCORE_MSG + score;
+        FONT.drawString(scoreMsg, 100, 100);
 
         // detect win
         if (score_level1 == 1) {
             isLevel1 = true;
             gameOn = false;
             score_level1 = 0;
+            score = 0;
         }
 
         if(score_level2 == 3){
@@ -230,7 +234,7 @@ public class ShadowFlap extends AbstractGame {
             lifeBar.lifeLose();
             bird.reset();
             pipeSet_steels.poll();
-            currentPipeSet = pipeSet_steels.peek();
+            currentPipeSet_steel = pipeSet_steels.peek();
             collision = false;
 
         }
@@ -264,8 +268,8 @@ public class ShadowFlap extends AbstractGame {
 
             for(PipeSet_steel pipeSet:pipeSet_steels){
                 pipeSet.update();
-                Rectangle topPipeBox = currentPipeSet.getTopBox();
-                Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
+                Rectangle topPipeBox = currentPipeSet_steel.getTopBox();
+                Rectangle bottomPipeBox = currentPipeSet_steel.getBottomBox();
                 collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
             };
             lifeBar.update();

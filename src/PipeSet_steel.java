@@ -1,6 +1,8 @@
 import bagel.DrawOptions;
 import bagel.Image;
 import bagel.Window;
+import bagel.util.Point;
+import bagel.util.Rectangle;
 
 import java.util.Random;
 
@@ -34,6 +36,15 @@ public class PipeSet_steel extends PipeSet {
     public void update() {
         renderPipeSet();
         pipeX -= PIPE_SPEED;
+    }
+
+    public Rectangle getTopBox() {
+        return PIPE_IMAGE.getBoundingBoxAt(new Point(pipeX, TOP_PIPE_Y));
+
+    }
+
+    public Rectangle getBottomBox() {
+        return PIPE_IMAGE.getBoundingBoxAt(new Point(pipeX, BOTTOM_PIPE_Y));
 
     }
 }
