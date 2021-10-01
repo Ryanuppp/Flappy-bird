@@ -15,11 +15,11 @@ public class LifeBar {
     private int level;
     public LifeBar(int level){
         this.level = level;
-        if(level == 1){
+        if(level == 0){
             totalLife = 6;
             leftOverLife = 6;
         }
-        if(level == 0){
+        if(level == 1){
             totalLife = 3;
             leftOverLife = 3;
         }
