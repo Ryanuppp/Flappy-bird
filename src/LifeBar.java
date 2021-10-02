@@ -16,12 +16,12 @@ public class LifeBar {
     public LifeBar(int level){
         this.level = level;
         if(level == 0){
-            totalLife = 6;
-            leftOverLife = 6;
-        }
-        if(level == 1){
             totalLife = 3;
             leftOverLife = 3;
+        }
+        if(level == 1){
+            totalLife = 6;
+            leftOverLife = 6;
         }
     }
 

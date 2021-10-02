@@ -7,14 +7,15 @@ import bagel.util.Rectangle;
 import java.lang.Math;
 
 public class Bird {
-    private final Image WING_DOWN_IMAGE = new Image("res/level-0/birdWingDown.png");
-    private final Image WING_UP_IMAGE = new Image("res/level-0/birdWingUp.png");
     private final double X = 200;
     private final double FLY_SIZE = 6;
     private final double FALL_SIZE = 0.4;
     private final double INITIAL_Y = 350;
     private final double Y_TERMINAL_VELOCITY = 10;
     private final double SWITCH_FRAME = 10;
+
+    private Image WING_DOWN_IMAGE = new Image("res/level-0/birdWingDown.png");
+    private Image WING_UP_IMAGE = new Image("res/level-0/birdWingUp.png");
     private int frameCount = 0;
     private double y;
     private double yVelocity;
@@ -53,6 +54,11 @@ public class Bird {
         yVelocity = 0;
         boundingBox = WING_DOWN_IMAGE.getBoundingBoxAt(new Point(X, y));
         frameCount = 0;
+    }
+
+    public void levelUp(){
+        WING_UP_IMAGE = new Image("res/level-1/birdWingUp.png");
+        WING_DOWN_IMAGE = new Image("res/level-1/birdWingDown.png");
     }
 
     public double getY() {

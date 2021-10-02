@@ -1,7 +1,6 @@
 import bagel.*;
 import bagel.util.Rectangle;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -25,20 +24,19 @@ public class ShadowFlap extends AbstractGame {
     private final int SCORE_MSG_OFFSET = 75;
     private Bird bird;
     private PipeSet currentPipeSet;
-    private PipeSet_steel currentPipeSet_steel;
     private LifeBar lifeBar;
     private Queue<PipeSet> pipeSets;
     private Queue<PipeSet> waitingToRemovePipeSet;
-    private Queue<PipeSet_steel> pipeSet_steels;
-    private Queue<PipeSet_steel> waitingToRemovePipeSet_steel;
+    private int score_level0;
     private int score_level1;
-    private int score_level2;
     private int score;
     private boolean gameOn;
     private boolean collision;
     private boolean win;
     private int frameCount;
     private boolean isLevel1;
+    private int timeScale;
+    private int interval;
 
 
     public ShadowFlap() {
@@ -48,16 +46,18 @@ public class ShadowFlap extends AbstractGame {
         // currentPipeSet = new PipeSet();
         pipeSets = new LinkedList<PipeSet>();
         waitingToRemovePipeSet = new LinkedList<PipeSet>();
-        pipeSets.offer(new PipeSet());
+        pipeSets.offer(new PipeSet(0));
         currentPipeSet = (PipeSet)pipeSets.peek();
         frameCount = 0;
         score = 0;
+        score_level0 = 0;
         score_level1 = 0;
-        score_level2 = 0;
         gameOn = false;
         collision = false;
         win = false;
         isLevel1 = false;
+        timeScale = 0;  // speed of pipe
+        interval = 100; //the interval to spawn a pipeSet
     }
 
     /**
@@ -74,10 +74,92 @@ public class ShadowFlap extends AbstractGame {
      */
     @Override
     public void update(Input input) {
-        if(!isLevel1){
-            update_level0(input);
-        }else{
-            update_level1(input);
+        if(!isLevel1)
+            BACKGROUND_IMAGE.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
+        else
+            BACKGROUND_IMAGE_LEVEL1.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
+        if (input.wasPressed(Keys.ESCAPE)) {
+            Window.close();
+        }
+
+        // game has not started
+        if (!gameOn) {
+            if(!isLevel1)
+                renderInstructionScreen(input);
+            else
+                renderLevelUpScreen(input);
+        }
+
+        if ((collision || birdOutOfBound()) && lifeBar.getLeftOverLife()!= 0){
+            lifeBar.lifeLose();
+            bird.reset();
+            pipeSets.poll();
+            currentPipeSet = pipeSets.peek();
+            collision = false;
+        }
+
+        // game over
+        if (lifeBar.getLeftOverLife() == 0) {
+            if(!isLevel1)
+                renderGameOverScreen(score_level0);
+            else
+                renderGameOverScreen(score_level1);
+        }
+
+        // game won
+        if (win) {
+            renderWinScreen();
+        }
+
+        // game is active
+        if (gameOn && !collision && !win && !birdOutOfBound()) {
+
+            frameCount++;
+            if(frameCount % interval == 0){
+                if(!isLevel1)
+                    pipeSets.offer(new PipeSet(0));
+                else
+                    pipeSets.offer(new PipeSet(1));
+            }
+
+            bird.update(input);
+            Rectangle birdBox = bird.getBox();
+
+            if(!waitingToRemovePipeSet.isEmpty())
+                for(PipeSet pipeSet:waitingToRemovePipeSet){
+                    if(pipeSet.getPipeX()<-100)
+                        waitingToRemovePipeSet.poll();
+                    else
+                        pipeSet.update();
+                }
+
+            if(input.wasPressed(Keys.L)){
+                if (timeScale<4){
+                    frameCount = frameCount/100 * 100;
+                    timeScale++;
+                    interval-=15;
+                }
+            }
+
+            if(input.wasPressed(Keys.K)){
+                if(timeScale>0){
+                    frameCount = frameCount/100 * 100;
+                    timeScale--;
+                    interval+=15;
+                }
+            }
+
+            if(!pipeSets.isEmpty())
+                for(PipeSet pipeSet:pipeSets){
+                    pipeSet.changeSpeed(timeScale);
+                    pipeSet.update();
+                    Rectangle topPipeBox = currentPipeSet.getTopBox();
+                    Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
+                    collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
+                }
+            lifeBar.update();
+            updateScore();
+
         }
     }
 
@@ -103,7 +185,7 @@ public class ShadowFlap extends AbstractGame {
 
     public void renderWinScreen() {
         FONT.drawString(CONGRATS_MSG, (Window.getWidth()/2.0-(FONT.getWidth(CONGRATS_MSG)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0)));
-        String finalScoreMsg = FINAL_SCORE_MSG + score_level2;
+        String finalScoreMsg = FINAL_SCORE_MSG + score_level1;
         FONT.drawString(finalScoreMsg, (Window.getWidth()/2.0-(FONT.getWidth(finalScoreMsg)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
     }
 
@@ -111,10 +193,12 @@ public class ShadowFlap extends AbstractGame {
         FONT.drawString(LEVEL_UP_MSG, (Window.getWidth()/2.0-(FONT.getWidth(LEVEL_UP_MSG)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0)));
         FONT.drawString(INSTRUCTION_MSG_LEVELUP, (Window.getWidth()/2.0-(FONT.getWidth(INSTRUCTION_MSG)/2.0)), (Window.getHeight()/2.0-(FONT_SIZE/2.0))+SCORE_MSG_OFFSET);
         lifeBar = new LifeBar(1);
-        pipeSet_steels = new LinkedList<PipeSet_steel>();
-        waitingToRemovePipeSet_steel = new LinkedList<PipeSet_steel>();
-        pipeSet_steels.offer(new PipeSet_steel());
-        currentPipeSet_steel = (PipeSet_steel)pipeSet_steels.peek();
+        pipeSets.clear();
+        pipeSets.offer(new PipeSet(1));
+        currentPipeSet = pipeSets.peek();
+        bird.reset();
+        bird.levelUp();
+        waitingToRemovePipeSet.clear();
         if (input.wasPressed(Keys.ENTER)) {
             gameOn = true;
         }
@@ -129,152 +213,37 @@ public class ShadowFlap extends AbstractGame {
     public void updateScore() {
         // TODO level0 and level1 have different ways to update score
         if (!isLevel1 && bird.getX() > currentPipeSet.getTopBox().right()) {
-             score_level1 += 1;
+             score_level0 += 1;
              //smooth the animation
-             waitingToRemovePipeSet.offer(pipeSets.poll());
-             if(!pipeSets.isEmpty())
-                 currentPipeSet = pipeSets.peek();
+             if(!pipeSets.isEmpty()){
+                waitingToRemovePipeSet.offer(pipeSets.poll());
+                if(!pipeSets.isEmpty())
+                    currentPipeSet = pipeSets.peek();
+             }
+             score = score_level0;
+        }else if(isLevel1 && bird.getX() > currentPipeSet.getTopBox().right()){
+             score_level1 += 2;
+             if(!pipeSets.isEmpty()){
+                waitingToRemovePipeSet.offer(pipeSets.poll());
+                if(!pipeSets.isEmpty())
+                    currentPipeSet = pipeSets.peek();
+             }
              score = score_level1;
-        }else if(isLevel1 && bird.getX() > currentPipeSet_steel.getTopBox().right()){
-             score_level2 += 1;
-             waitingToRemovePipeSet_steel.offer(pipeSet_steels.poll());
-             if(!pipeSet_steels.isEmpty())
-                 currentPipeSet_steel = pipeSet_steels.peek();
-             score = score_level2;
         }
         String scoreMsg = SCORE_MSG + score;
         FONT.drawString(scoreMsg, 100, 100);
 
         // detect win
-        if (score_level1 == 1) {
+        if (score_level0 == 1){
             isLevel1 = true;
             gameOn = false;
-            score_level1 = 0;
+            score_level0 = 0;
             score = 0;
+            frameCount = 0;
         }
 
-        if(score_level2 == 3){
+        if(score_level1 == 100){
             win = true;
-        }
-    }
-
-    public void update_level0(Input input){
-        BACKGROUND_IMAGE.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
-
-        if (input.wasPressed(Keys.ESCAPE)) {
-            Window.close();
-        }
-
-        // game has not started
-        if (!gameOn) {
-            renderInstructionScreen(input);
-        }
-
-        if ((collision || birdOutOfBound()) && lifeBar.getLeftOverLife() != 0){
-            lifeBar.lifeLose();
-            bird.reset();
-            pipeSets.poll();
-            currentPipeSet = pipeSets.peek();
-            collision = false;
-
-        }
-
-        // game over
-        if ( lifeBar.getLeftOverLife() == 0) {
-            renderGameOverScreen(score_level1);
-        }
-
-        // game won
-        if (win) {
-            renderWinScreen();
-        }
-
-        // game is active
-        if (gameOn && !collision && !win && !birdOutOfBound()) {
-
-            frameCount++;
-            if(frameCount % 100 == 0){
-                pipeSets.offer(new PipeSet());
-            }
-
-            bird.update(input);
-            Rectangle birdBox = bird.getBox();
-            for(PipeSet pipeSet:waitingToRemovePipeSet){
-                if(pipeSet.getPipeX()<-30)
-                    waitingToRemovePipeSet.poll();
-                else
-                    pipeSet.update();
-            }
-
-            for(PipeSet pipeSet:pipeSets){
-                pipeSet.update();
-                Rectangle topPipeBox = currentPipeSet.getTopBox();
-                Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
-                collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
-            };
-            lifeBar.update();
-            updateScore();
-
-        }
-    }
-
-    public void update_level1(Input input){
-        BACKGROUND_IMAGE_LEVEL1.draw(Window.getWidth()/2.0, Window.getHeight()/2.0);
-
-        if (input.wasPressed(Keys.ESCAPE)) {
-            Window.close();
-        }
-
-        // game has not started
-        if (!gameOn) {
-            renderLevelUpScreen(input);
-        }
-
-        if ((collision || birdOutOfBound()) && lifeBar.getLeftOverLife() != 0){
-            lifeBar.lifeLose();
-            bird.reset();
-            pipeSet_steels.poll();
-            currentPipeSet_steel = pipeSet_steels.peek();
-            collision = false;
-
-        }
-
-        // game over
-        if ( lifeBar.getLeftOverLife() == 0) {
-            renderGameOverScreen(score_level2);
-        }
-
-        // game won
-        if (win) {
-            renderWinScreen();
-        }
-
-        // game is active
-        if (gameOn && !collision && !win && !birdOutOfBound()) {
-
-            frameCount++;
-            if(frameCount % 100 == 0){
-                pipeSet_steels.offer(new PipeSet_steel());
-            }
-
-            bird.update(input);
-            Rectangle birdBox = bird.getBox();
-            for(PipeSet_steel pipeSet:waitingToRemovePipeSet_steel){
-                if(pipeSet.getPipeX()<-30)
-                    waitingToRemovePipeSet_steel.poll();
-                else
-                    pipeSet.update();
-            }
-
-            for(PipeSet_steel pipeSet:pipeSet_steels){
-                pipeSet.update();
-                Rectangle topPipeBox = currentPipeSet_steel.getTopBox();
-                Rectangle bottomPipeBox = currentPipeSet_steel.getBottomBox();
-                collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
-            };
-            lifeBar.update();
-            updateScore();
-
         }
     }
 
