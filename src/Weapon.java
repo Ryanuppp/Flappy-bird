@@ -14,7 +14,7 @@ import java.util.Random;
  * @brief weapon
  */
 public class Weapon {
-    private final int WEAPON_TRAVEL_SPEED = 7;
+    private int WEAPON_TRAVEL_SPEED = 5;
     private final int WEAPON_SHOOT_SPEED = 5;
     private double weaponX;
     private int weaponY;
@@ -22,6 +22,7 @@ public class Weapon {
     private Rectangle boundingBox;
     private Image weaponImage;
     private Random random =  new Random();
+    private final int []speed = {5,6,7,8,9};
 
     public Weapon(int weaponX, int weaponY, int shootingRange, Image image){
         this.weaponX = weaponX;
@@ -36,6 +37,10 @@ public class Weapon {
 
     public double getX() {
         return weaponX;
+    }
+
+    public void changeSpeed(int timescale){
+        WEAPON_TRAVEL_SPEED = speed[timescale];
     }
 
     public void renderWeapon(){

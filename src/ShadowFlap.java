@@ -190,6 +190,7 @@ public class ShadowFlap extends AbstractGame {
                     }
                 }
                 for(Weapon weapon: weaponQueue){
+                    weapon.changeSpeed(timeScale);
                     weapon.travel_update();
                 }
 
@@ -207,6 +208,7 @@ public class ShadowFlap extends AbstractGame {
                 currentWeapon = weaponQueue.peek();
 
                 for(Weapon weapon: waitingToRemoveWeaponQueue){
+                    weapon.changeSpeed(timeScale);
                     weapon.travel_update();
                     if(weapon.getX()<-50)
                         waitingToRemoveWeaponQueue.remove(weapon);
@@ -240,9 +242,9 @@ public class ShadowFlap extends AbstractGame {
             // draw weapon on th top
             if (isLevel1 && holdWeapon !=0){
                 if(holdWeapon == 1)
-                    ROCK_IMAGE.draw(400,15);
+                    ROCK_IMAGE.draw(bird.getX()+30,bird.getY());
                 else if(holdWeapon == 2)
-                    BOMB_IMAGE.draw(400,15);
+                    BOMB_IMAGE.draw(bird.getX()+30,bird.getY());
             }
 
             // emission the weapon
@@ -271,6 +273,7 @@ public class ShadowFlap extends AbstractGame {
                             // collision and pipeSet is plastic
                             if(detectCollision(weapon.getBox(),pipeSet.getTopBox(),pipeSet.getBottomBox())){
                                 if(pipeSet.getPIPE_TYPE() == 0){
+                                    update_shooting();
                                     pipeSets.remove(pipeSet);
                                     currentPipeSet = pipeSets.peek();
                                 }
@@ -284,6 +287,7 @@ public class ShadowFlap extends AbstractGame {
                         // BOMB
                         for(PipeSet pipeSet:pipeSets){
                             if(detectCollision(weapon.getBox(),pipeSet.getTopBox(),pipeSet.getBottomBox())){
+                                update_shooting();
                                 pipeSets.remove(pipeSet);
                                 currentPipeSet = pipeSets.peek();
                                 Bomb bomb = (Bomb)weapon;
@@ -392,6 +396,11 @@ public class ShadowFlap extends AbstractGame {
         if(score_level1 == 100){
             win = true;
         }
+    }
+
+    // Once collided with a pipe
+    public void update_shooting(){
+        score_level1 += 1;
     }
 
 }
