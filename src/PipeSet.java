@@ -70,7 +70,7 @@ public class PipeSet {
         if(type==0)
             return PIPE_IMAGE_PLASTIC.getBoundingBoxAt(new Point(pipeX, BOTTOM_PIPE_Y));
         else
-            return PIPE_IMAGE_STEEL.getBoundingBoxAt(new Point(pipeX, TOP_PIPE_Y));
+            return PIPE_IMAGE_STEEL.getBoundingBoxAt(new Point(pipeX, BOTTOM_PIPE_Y));
     }
 
 
