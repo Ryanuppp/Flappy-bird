@@ -8,16 +8,13 @@ import bagel.util.Rectangle;
  * @brief
  */
 public class Rock extends Weapon{
-    private final Image rock = new Image("res/level-1/rock.png");
+    private static final Image rock = new Image("res/level-1/rock.png");
     private Rectangle boundingBox;
-    private final int ShootingRange = 25;
+    private static final int ShootingRange = 25;
 
-    public Rock(){
-
+    public Rock(int X, int Y){
+        super(X, Y,ShootingRange, rock);
     }
 
-    public Rectangle update(){
-        // TODO: movement and explode of Rock
-        return boundingBox;
-    }
+
 }

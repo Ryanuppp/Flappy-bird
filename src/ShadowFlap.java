@@ -3,6 +3,7 @@ import bagel.util.Rectangle;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 
 /**
  * SWEN20003 Project 1, Semester 2, 2021
@@ -12,6 +13,8 @@ import java.util.Queue;
 public class ShadowFlap extends AbstractGame {
     private final Image BACKGROUND_IMAGE = new Image("res/level-0/background.png");
     private final Image BACKGROUND_IMAGE_LEVEL1 = new Image("res/level-1/background.png");
+    private final Image BOMB_IMAGE = new Image("res/level-1/bomb.png");
+    private final Image ROCK_IMAGE = new Image("res/level-1/rock.png");
     private final String INSTRUCTION_MSG = "PRESS SPACE TO START";
     private final String INSTRUCTION_MSG_LEVELUP = "PRESS ENTER TO CONTINUE";
     private final String GAME_OVER_MSG = "GAME OVER!";
@@ -24,28 +27,40 @@ public class ShadowFlap extends AbstractGame {
     private final int SCORE_MSG_OFFSET = 75;
     private Bird bird;
     private PipeSet currentPipeSet;
+    private Weapon currentWeapon;
+
     private LifeBar lifeBar;
     private Queue<PipeSet> pipeSets;
     private Queue<PipeSet> waitingToRemovePipeSet;
+    private Queue<Weapon> weaponQueue;
+    private Queue<Weapon> waitingToRemoveWeaponQueue;
+    private Queue<Weapon> emissionQueue;
     private int score_level0;
     private int score_level1;
     private int score;
     private boolean gameOn;
     private boolean collision;
+    private boolean collision_pickup;
+    private int holdWeapon;
     private boolean win;
     private int frameCount;
     private boolean isLevel1;
     private int timeScale;
     private int interval;
+    private Random random;
 
 
     public ShadowFlap() {
         super(1024, 768, "ShadowFlap");
+        random =  new Random();
         bird = new Bird();
         lifeBar = new LifeBar(0);
         // currentPipeSet = new PipeSet();
         pipeSets = new LinkedList<PipeSet>();
         waitingToRemovePipeSet = new LinkedList<PipeSet>();
+        waitingToRemoveWeaponQueue = new LinkedList<Weapon>();
+        weaponQueue = new LinkedList<Weapon>();
+        emissionQueue = new LinkedList<Weapon>();
         pipeSets.offer(new PipeSet(0));
         currentPipeSet = (PipeSet)pipeSets.peek();
         frameCount = 0;
@@ -56,6 +71,8 @@ public class ShadowFlap extends AbstractGame {
         collision = false;
         win = false;
         isLevel1 = false;
+        collision_pickup = false;
+        holdWeapon = 0;
         timeScale = 0;  // speed of pipe
         interval = 100; //the interval to spawn a pipeSet
     }
@@ -153,11 +170,131 @@ public class ShadowFlap extends AbstractGame {
                 for(PipeSet pipeSet:pipeSets){
                     pipeSet.changeSpeed(timeScale);
                     pipeSet.update();
-                    Rectangle topPipeBox = currentPipeSet.getTopBox();
-                    Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
-                    collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
                 }
+
+            if(currentPipeSet != null){
+                Rectangle topPipeBox = currentPipeSet.getTopBox();
+                Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
+                collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
+            }
             lifeBar.update();
+
+            // spawn weapons
+            if (isLevel1){
+                if(frameCount % 125 == 0){
+                    if(0 == random.nextInt(2)){
+                        weaponQueue.offer(new Rock(1500, random.nextInt(100 + 700 )));
+                    }
+                    else{
+                        weaponQueue.offer(new Bomb(1500, random.nextInt(100 + 700 )));
+                    }
+                }
+                for(Weapon weapon: weaponQueue){
+                    weapon.travel_update();
+                }
+
+                if (!weaponQueue.isEmpty()){
+                    double a = weaponQueue.peek().getX();
+                    double b = bird.getX()-30;
+                    if(weaponQueue.size()>2){
+                        int c = 0;
+                    }
+                    if(weaponQueue.peek().getX()<bird.getX()-30){
+                        waitingToRemoveWeaponQueue.offer(weaponQueue.poll());
+                    }
+                }
+
+                currentWeapon = weaponQueue.peek();
+
+                for(Weapon weapon: waitingToRemoveWeaponQueue){
+                    weapon.travel_update();
+                    if(weapon.getX()<-50)
+                        waitingToRemoveWeaponQueue.remove(weapon);
+                }
+
+                if(currentWeapon!= null){
+                    collision_pickup = detectPickUp(birdBox, currentWeapon.getBox());
+                    // System.out.println(currentWeapon.getClass());
+                    // System.out.println(currentWeapon.hashCode());
+                }
+            }
+
+            // test
+            if(collision_pickup){
+                System.out.println("meet weapon");
+            }
+
+            if (isLevel1 && collision_pickup && holdWeapon ==0){
+                Weapon weapon = weaponQueue.poll();
+                if(weapon instanceof Rock)
+                    holdWeapon = 1;
+                else
+                    holdWeapon = 2;
+                System.out.println("hold it.");
+                collision_pickup = false;
+            }else if (collision_pickup &&  holdWeapon != 0 && isLevel1){
+                System.out.println("already have weapon:"+ holdWeapon);
+                collision_pickup = false;
+            }
+
+            // draw weapon on th top
+            if (isLevel1 && holdWeapon !=0){
+                if(holdWeapon == 1)
+                    ROCK_IMAGE.draw(400,15);
+                else if(holdWeapon == 2)
+                    BOMB_IMAGE.draw(400,15);
+            }
+
+            // emission the weapon
+            if(isLevel1 && input.wasPressed(Keys.S)){
+                if(holdWeapon !=0){
+                    System.out.println("emission Weapon:"+holdWeapon);
+                    if (holdWeapon == 1)
+                        emissionQueue.offer(new Rock((int)bird.getX(),(int)bird.getY()));
+                    else if(holdWeapon == 2)
+                        emissionQueue.offer(new Bomb((int)bird.getX(),(int)bird.getY()));
+                    holdWeapon = 0;
+                }
+                else{
+                    System.out.println("no weapon!");
+
+                }
+            }
+
+            // update weapon
+            if(!emissionQueue.isEmpty()){
+                for(Weapon weapon:emissionQueue){
+                    weapon.shoot_update();
+                    // ROCK
+                    if(weapon instanceof Rock){
+                        for(PipeSet pipeSet:pipeSets){
+                            // collision and pipeSet is plastic
+                            if(detectCollision(weapon.getBox(),pipeSet.getTopBox(),pipeSet.getBottomBox())){
+                                if(pipeSet.getPIPE_TYPE() == 0){
+                                    pipeSets.remove(pipeSet);
+                                    currentPipeSet = pipeSets.peek();
+                                }
+
+                                emissionQueue.remove(weapon);
+                                return;
+                            }
+                        }
+                    }
+                    else {
+                        // BOMB
+                        for(PipeSet pipeSet:pipeSets){
+                            if(detectCollision(weapon.getBox(),pipeSet.getTopBox(),pipeSet.getBottomBox())){
+                                pipeSets.remove(pipeSet);
+                                currentPipeSet = pipeSets.peek();
+                                Bomb bomb = (Bomb)weapon;
+                                bomb.flame();
+                                emissionQueue.remove(weapon);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
             updateScore();
 
         }
@@ -210,8 +347,18 @@ public class ShadowFlap extends AbstractGame {
                 birdBox.intersects(bottomPipeBox);
     }
 
+    public boolean detectPickUp(Rectangle birdBox, Rectangle weaponBox){
+        return birdBox.intersects(weaponBox);
+    }
+
+
     public void updateScore() {
         // TODO level0 and level1 have different ways to update score
+        if(currentPipeSet == null ){
+            if(!pipeSets.isEmpty())
+                currentPipeSet = pipeSets.peek();
+            return;
+        }
         if (!isLevel1 && bird.getX() > currentPipeSet.getTopBox().right()) {
              score_level0 += 1;
              //smooth the animation

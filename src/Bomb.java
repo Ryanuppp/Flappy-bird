@@ -8,16 +8,17 @@ import bagel.util.Rectangle;
  * @brief
  */
 public class Bomb extends Weapon{
-    private final Image bomb = new Image("res/level-1/bomb.png");
-    private final Image flame = new Image("res/level-1/flame.png");
-    private final int ShootingRange = 50;
-
+    private static final Image bomb = new Image("res/level-1/bomb.png");
+    private static final Image flame = new Image("res/level-1/flame.png");
+    private static final int ShootingRange = 50;
     private Rectangle boundingBox;
-    public Bomb(){
 
+    public Bomb(int X, int Y){
+        super(X,Y,ShootingRange, bomb);
     }
-    public Rectangle update(Input input){
-        // TODO: movement of bomb and explode
-        return boundingBox;
+
+    public void flame(){
+        flame.draw(getX(), getY());
     }
+
 }
