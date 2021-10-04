@@ -153,9 +153,11 @@ public class ShadowFlap extends AbstractGame {
                 for(PipeSet pipeSet:pipeSets){
                     pipeSet.changeSpeed(timeScale);
                     pipeSet.update();
-                    Rectangle topPipeBox = currentPipeSet.getTopBox();
-                    Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
-                    collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
+                    if(currentPipeSet != null){
+                        Rectangle topPipeBox = currentPipeSet.getTopBox();
+                        Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
+                        collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
+                    }
                 }
             lifeBar.update();
             updateScore();
@@ -212,6 +214,11 @@ public class ShadowFlap extends AbstractGame {
 
     public void updateScore() {
         // TODO level0 and level1 have different ways to update score
+        if(currentPipeSet == null){
+            if(!pipeSets.isEmpty())
+                currentPipeSet = pipeSets.peek();
+            return;
+        }
         if (!isLevel1 && bird.getX() > currentPipeSet.getTopBox().right()) {
              score_level0 += 1;
              //smooth the animation
