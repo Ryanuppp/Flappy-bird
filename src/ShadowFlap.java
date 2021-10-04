@@ -170,9 +170,6 @@ public class ShadowFlap extends AbstractGame {
                 for(PipeSet pipeSet:pipeSets){
                     pipeSet.changeSpeed(timeScale);
                     pipeSet.update();
-                    Rectangle topPipeBox = currentPipeSet.getTopBox();
-                    Rectangle bottomPipeBox = currentPipeSet.getBottomBox();
-                    collision = detectCollision(birdBox, topPipeBox, bottomPipeBox);
                 }
 
             if(currentPipeSet != null){
