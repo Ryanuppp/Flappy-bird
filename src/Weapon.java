@@ -23,12 +23,14 @@ public class Weapon {
     private Image weaponImage;
     private Random random =  new Random();
     private final int []speed = {5,6,7,8,9};
+    private int shoot_length;
 
     public Weapon(int weaponX, int weaponY, int shootingRange, Image image){
         this.weaponX = weaponX;
         this.weaponY = weaponY;
         this.shootingRange = shootingRange;
         weaponImage = image;
+        shoot_length = 0;
     }
 
     public double getY() {
@@ -55,6 +57,15 @@ public class Weapon {
     public void shoot_update(){
         renderWeapon();;
         weaponX += WEAPON_SHOOT_SPEED;
+        shoot_length += WEAPON_SHOOT_SPEED;
+    }
+
+    public int getShoot_length() {
+        return shoot_length;
+    }
+
+    public int getShootingRange(){
+        return shootingRange;
     }
 
     public Rectangle getBox() {

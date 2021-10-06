@@ -113,6 +113,8 @@ public class ShadowFlap extends AbstractGame {
             pipeSets.poll();
             currentPipeSet = pipeSets.peek();
             collision = false;
+            if(isLevel1)
+                holdWeapon = 0;
         }
 
         // game over
@@ -150,6 +152,7 @@ public class ShadowFlap extends AbstractGame {
                         pipeSet.update();
                 }
 
+            // speed up
             if(input.wasPressed(Keys.L)){
                 if (timeScale<4){
                     frameCount = frameCount/100 * 100;
@@ -158,6 +161,7 @@ public class ShadowFlap extends AbstractGame {
                 }
             }
 
+            // slow down
             if(input.wasPressed(Keys.K)){
                 if(timeScale>0){
                     frameCount = frameCount/100 * 100;
@@ -181,12 +185,12 @@ public class ShadowFlap extends AbstractGame {
 
             // spawn weapons
             if (isLevel1){
-                if(frameCount % 125 == 0){
+                if(frameCount%interval!= 0 && frameCount % 125 == 0){
                     if(0 == random.nextInt(2)){
-                        weaponQueue.offer(new Rock(1500, random.nextInt(100 + 700 )));
+                        weaponQueue.offer(new Rock(1500, random.nextInt(700 ) + 100));
                     }
                     else{
-                        weaponQueue.offer(new Bomb(1500, random.nextInt(100 + 700 )));
+                        weaponQueue.offer(new Bomb(1500, random.nextInt(700 ) + 100));
                     }
                 }
                 for(Weapon weapon: weaponQueue){
@@ -195,11 +199,6 @@ public class ShadowFlap extends AbstractGame {
                 }
 
                 if (!weaponQueue.isEmpty()){
-                    double a = weaponQueue.peek().getX();
-                    double b = bird.getX()-30;
-                    if(weaponQueue.size()>2){
-                        int c = 0;
-                    }
                     if(weaponQueue.peek().getX()<bird.getX()-30){
                         waitingToRemoveWeaponQueue.offer(weaponQueue.poll());
                     }
@@ -266,6 +265,10 @@ public class ShadowFlap extends AbstractGame {
             // update weapon
             if(!emissionQueue.isEmpty()){
                 for(Weapon weapon:emissionQueue){
+                    if(weapon.getShoot_length()>weapon.getShootingRange()){
+                        emissionQueue.remove(weapon);
+                        continue;
+                    }
                     weapon.shoot_update();
                     // ROCK
                     if(weapon instanceof Rock){
@@ -357,7 +360,7 @@ public class ShadowFlap extends AbstractGame {
 
 
     public void updateScore() {
-        // TODO level0 and level1 have different ways to update score
+
         if(currentPipeSet == null ){
             if(!pipeSets.isEmpty())
                 currentPipeSet = pipeSets.peek();
@@ -385,7 +388,7 @@ public class ShadowFlap extends AbstractGame {
         FONT.drawString(scoreMsg, 100, 100);
 
         // detect win
-        if (score_level0 == 1){
+        if (score_level0 >= 1){
             isLevel1 = true;
             gameOn = false;
             score_level0 = 0;
@@ -393,7 +396,7 @@ public class ShadowFlap extends AbstractGame {
             frameCount = 0;
         }
 
-        if(score_level1 == 100){
+        if(score_level1 >= 30){
             win = true;
         }
     }
@@ -401,6 +404,9 @@ public class ShadowFlap extends AbstractGame {
     // Once collided with a pipe
     public void update_shooting(){
         score_level1 += 1;
+        score = score_level1;
+        String scoreMsg = SCORE_MSG + score;
+        FONT.drawString(scoreMsg, 100, 100);
     }
 
 }

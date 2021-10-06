@@ -10,7 +10,7 @@ import bagel.util.Rectangle;
 public class Bomb extends Weapon{
     private static final Image bomb = new Image("res/level-1/bomb.png");
     private static final Image flame = new Image("res/level-1/flame.png");
-    private static final int ShootingRange = 50;
+    private static final int ShootingRange = 150;
     private Rectangle boundingBox;
 
     public Bomb(int X, int Y){

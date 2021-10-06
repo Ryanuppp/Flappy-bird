@@ -10,7 +10,7 @@ import bagel.util.Rectangle;
 public class Rock extends Weapon{
     private static final Image rock = new Image("res/level-1/rock.png");
     private Rectangle boundingBox;
-    private static final int ShootingRange = 25;
+    private static final int ShootingRange = 100;
 
     public Rock(int X, int Y){
         super(X, Y,ShootingRange, rock);
